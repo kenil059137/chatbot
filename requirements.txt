@@ -1,0 +1,13 @@
+langchain==0.2.16
+langchain-community==0.2.16
+chromadb==0.5.5
+fastapi==0.112.0
+uvicorn==0.30.5
+sentence-transformers==3.0.1
+pypdf==4.3.1
+requests==2.32.3
+beautifulsoup4==4.12.3
+pytesseract==0.3.10
+Pillow==10.4.0
+langdetect==1.0.9
+ollama==0.3.3   

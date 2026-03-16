@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Support Chatbot</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            color: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 60%;
+        }
+
+        .user {
+            background-color: #1e1e1e;
+            align-self: flex-end;
+        }
+
+        .bot {
+            background-color: #333;
+            align-self: flex-start;
+        }
+
+        .input-container {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #222;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            background-color: #111;
+            border: none;
+            color: white;
+            outline: none;
+            border-radius: 5px;
+        }
+
+        button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #444;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container" id="chat"></div>
+
+    <div class="input-container">
+        <input type="text" id="messageInput" placeholder="Ask something..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+<script>
+
+const sessionId = "kenil"; // you can make this dynamic later
+
+function addMessage(text, sender) {
+    const chat = document.getElementById("chat");
+    const message = document.createElement("div");
+    message.classList.add("message", sender);
+    message.innerText = text;
+    chat.appendChild(message);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendMessage() {
+
+    const input = document.getElementById("messageInput");
+    const userText = input.value;
+
+    if (!userText) return;
+
+    addMessage(userText, "user");
+    input.value = "";
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                session_id: sessionId,
+                question: userText
+            })
+        });
+
+        const data = await response.json();
+        addMessage(data.answer, "bot");
+
+    } catch (error) {
+        addMessage("Error connecting to server.", "bot");
+    }
+}
+
+</script>
+
+</body>
+</html>
