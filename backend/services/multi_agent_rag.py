@@ -1,8 +1,9 @@
 from .retriever import retrieve_with_scores
-from ..rag_chain import gemini_llm
+from .generator import generate_answer
+from .critic import verify_answer
 
 
-def multi_agent_rag(question):
+def multi_agent_rag(question, session_id=None):
 
     # Agent 1: Retriever
     docs, confidence = retrieve_with_scores(question)
@@ -10,35 +11,21 @@ def multi_agent_rag(question):
     context = "\n\n".join(doc.page_content for doc in docs)
 
     # Agent 2: Generator
-    prompt = f"""
-You are an assistant answering based only on the provided context.
+    answer = generate_answer(question, context)
 
-Context:
-{context}
+    # Agent 3: Critic
+    is_valid = verify_answer(question, context, answer)
 
-Question:
-{question}
-
-Answer clearly.
-"""
-
-    answer = gemini_llm(prompt)
-
-    # Agent 3: Simple critic
-    if not context.strip():
-        answer = "I could not find relevant information in the documents."
+    if not is_valid:
+        answer = "I could not verify a reliable answer. Please contact university support directly."
 
     return answer, confidence
 
 
 if __name__ == "__main__":
-
     while True:
         q = input("Ask: ")
-
         answer, conf = multi_agent_rag(q)
-
         print("\nAnswer:", answer)
         print("Confidence:", conf)
         print("\n-----------------\n")
-print("Total docs:", vector_db._collection.count())

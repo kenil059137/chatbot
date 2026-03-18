@@ -1,7 +1,4 @@
 import os
-
-from langchain_community.vectorstores import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -45,17 +42,8 @@ def gemini_llm(prompt):
 # Embeddings + Vector DB
 # =========================
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CHROMA_PATH = os.path.join(BASE_DIR, "chroma_db")
 
-embedding = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
-
-vector_db = Chroma(
-    persist_directory=CHROMA_PATH,
-    embedding_function=embedding
-)
+from backend.services.vector_store import vector_db
 
 retriever = vector_db.as_retriever(
     search_type="mmr",
