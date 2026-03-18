@@ -1,5 +1,5 @@
-from services.retriever import retrieve_with_scores
-from rag_chain import gemini_llm
+from .retriever import retrieve_with_scores
+from ..rag_chain import gemini_llm
 
 
 def multi_agent_rag(question):
@@ -41,3 +41,4 @@ if __name__ == "__main__":
         print("\nAnswer:", answer)
         print("Confidence:", conf)
         print("\n-----------------\n")
+print("Total docs:", vector_db._collection.count())

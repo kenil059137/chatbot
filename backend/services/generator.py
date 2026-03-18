@@ -1,4 +1,4 @@
-from backend.rag_chain import gemini_llm
+from ..rag_chain import gemini_llm
 
 
 def generate_answer(question, context):

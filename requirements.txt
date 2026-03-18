@@ -1,6 +1,8 @@
 langchain==0.2.16
 langchain-community==0.2.16
-chromadb==0.5.5
+langchain-huggingface==0.0.3
+langchain-chroma==0.1.4
+chromadb==0.5.3
 fastapi==0.112.0
 uvicorn==0.30.5
 sentence-transformers==3.0.1

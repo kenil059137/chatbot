@@ -1,8 +1,8 @@
 import os
 
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-
+from langchain_huggingface import HuggingFaceEmbeddings
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -12,13 +12,21 @@ from langchain_core.chat_history import InMemoryChatMessageHistory
 
 from google import genai
 
+#FOR COLLEGE ONLY 
+import ssl
+os.environ["CURL_CA_BUNDLE"] = ""
+os.environ["REQUESTS_CA_BUNDLE"] = ""
+ssl._create_default_https_context = ssl._create_unverified_context
+#stilll here 
 
 # =========================
 # Gemini Setup
 # =========================
 
-client = genai.Client(api_key="AIzaSyBPq3NfVwzn44eOpkaYZtap2B1WVTsuJSg")
 
+load_dotenv()
+
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def gemini_llm(prompt):
 
