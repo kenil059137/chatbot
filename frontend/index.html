@@ -1,126 +1,535 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Student Support Chatbot</title>
-    <style>
-        body {
-            margin: 0;
-            background-color: #000;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            color: white;
-        }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CHARUSAT Student Support</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
+    :root {
+      --bg:        #0a0a0a;
+      --bg2:       #111111;
+      --bg3:       #1a1a1a;
+      --bg4:       #222222;
+      --border:    #2a2a2a;
+      --border2:   #333333;
+      --text:      #e8e8e8;
+      --text2:     #888888;
+      --text3:     #555555;
+      --accent:    #7c6af7;
+      --accent-d:  #5f50d4;
+      --accent-bg: #1a1830;
+      --green:     #22c55e;
+      --green-bg:  #0d2818;
+      --green-t:   #4ade80;
+      --yellow:    #eab308;
+      --yellow-bg: #1f1a00;
+      --yellow-t:  #fde047;
+      --red:       #ef4444;
+      --red-bg:    #1f0808;
+      --red-t:     #f87171;
+      --font:      'Inter', sans-serif;
+      --mono:      'JetBrains Mono', monospace;
+      --r:         8px;
+      --r-lg:      12px;
+    }
 
-        .message {
-            margin: 10px 0;
-            padding: 10px 15px;
-            border-radius: 8px;
-            max-width: 60%;
-        }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
 
-        .user {
-            background-color: #1e1e1e;
-            align-self: flex-end;
-        }
+    .dashboard {
+      display: flex;
+      width: 100%;
+      max-width: 980px;
+      height: 660px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
 
-        .bot {
-            background-color: #333;
-            align-self: flex-start;
-        }
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
 
-        .input-container {
-            display: flex;
-            padding: 15px;
-            border-top: 1px solid #222;
-        }
+    .sidebar-header {
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid var(--border);
+    }
 
-        input {
-            flex: 1;
-            padding: 10px;
-            background-color: #111;
-            border: none;
-            color: white;
-            outline: none;
-            border-radius: 5px;
-        }
+    .brand { display: flex; align-items: center; gap: 10px; }
 
-        button {
-            margin-left: 10px;
-            padding: 10px 20px;
-            background-color: #444;
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 5px;
-        }
+    .brand-icon {
+      width: 32px; height: 32px;
+      background: var(--accent-bg);
+      border: 1px solid var(--accent);
+      border-radius: var(--r);
+      display: flex; align-items: center; justify-content: center;
+    }
 
-        button:hover {
-            background-color: #666;
-        }
-    </style>
+    .brand-icon svg { width: 16px; height: 16px; fill: var(--accent); }
+    .brand-name { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+    .brand-sub  { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+    .new-btn {
+      margin: 12px;
+      padding: 9px 12px;
+      background: transparent;
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      font-family: var(--font);
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.15s;
+    }
+
+    .new-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+    .new-btn svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+
+    .history-label {
+      padding: 8px 16px 4px;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-family: var(--mono);
+    }
+
+    .history-list { flex: 1; overflow-y: auto; }
+
+    .history-item {
+      padding: 9px 16px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background 0.12s;
+    }
+
+    .history-item:hover { background: var(--bg3); }
+
+    .history-item.active {
+      background: var(--accent-bg);
+      border-left-color: var(--accent);
+    }
+
+    .h-text {
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 400;
+    }
+
+    .h-time { font-size: 10px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .online-indicator {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text3); font-family: var(--mono);
+    }
+
+    .online-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+    .topbar {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg2);
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-title { font-size: 14px; font-weight: 500; color: var(--text); }
+
+    .conf-pill {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 99px;
+      display: none;
+      font-family: var(--mono);
+    }
+
+    .conf-pill.high { background: var(--green-bg);  color: var(--green-t);  border: 1px solid #164d2a; }
+    .conf-pill.med  { background: var(--yellow-bg); color: var(--yellow-t); border: 1px solid #3a3000; }
+    .conf-pill.low  { background: var(--red-bg);    color: var(--red-t);    border: 1px solid #3a1010; }
+
+    .stats-bar {
+      display: flex;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat {
+      flex: 1;
+      padding: 10px 18px;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: var(--mono);
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 2px;
+      font-family: var(--mono);
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--bg);
+    }
+
+    .msg { display: flex; gap: 12px; max-width: 84%; }
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+    .msg.bot  { align-self: flex-start; }
+
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 600;
+      flex-shrink: 0;
+      font-family: var(--mono);
+    }
+
+    .msg.bot .avatar  { background: var(--accent-bg); border: 1px solid var(--accent); color: var(--accent); }
+    .msg.user .avatar { background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); }
+
+    .bubble {
+      padding: 11px 15px;
+      border-radius: var(--r-lg);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .msg.bot .bubble {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-top-left-radius: 3px;
+    }
+
+    .msg.user .bubble {
+      background: var(--accent-bg);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      border-top-right-radius: 3px;
+    }
+
+    .msg-meta { font-size: 10px; color: var(--text3); margin-top: 5px; font-family: var(--mono); }
+    .msg.user .msg-meta { text-align: right; }
+
+    .typing-dots { display: flex; gap: 5px; align-items: center; padding: 3px 0; }
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--text3);
+      animation: pulse 1.4s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 60%, 100% { opacity: 0.3; transform: scale(1); }
+      30%            { opacity: 1;   transform: scale(1.3); }
+    }
+
+    .input-area {
+      padding: 14px 20px;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .input-area textarea {
+      flex: 1;
+      padding: 10px 14px;
+      font-family: var(--font);
+      font-size: 13px;
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      resize: none;
+      min-height: 40px;
+      max-height: 100px;
+      background: var(--bg3);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      line-height: 1.5;
+    }
+
+    .input-area textarea:focus { border-color: var(--accent); }
+    .input-area textarea::placeholder { color: var(--text3); }
+
+    .send-btn {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--r);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .send-btn:hover   { background: var(--accent-d); }
+    .send-btn:active  { transform: scale(0.94); }
+    .send-btn:disabled { background: var(--bg4); cursor: not-allowed; }
+    .send-btn svg { width: 15px; height: 15px; fill: none; stroke: #fff; stroke-width: 2; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+  </style>
 </head>
-
 <body>
 
-    <div class="chat-container" id="chat"></div>
-
-    <div class="input-container">
-        <input type="text" id="messageInput" placeholder="Ask something..." />
-        <button onclick="sendMessage()">Send</button>
+<div class="dashboard">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        </div>
+        <span class="brand-name">CHARUSAT</span>
+      </div>
+      <div class="brand-sub">Student Support AI</div>
     </div>
 
+    <button class="new-btn" onclick="newChat()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New conversation
+    </button>
+
+    <div class="history-label">History</div>
+    <div class="history-list" id="history-list">
+      <div class="history-item active">
+        <div class="h-text">Welcome</div>
+        <div class="h-time">just now</div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="online-indicator">
+        <div class="online-dot"></div>
+        localhost:8000
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title">Student Support Chat</span>
+      </div>
+      <div class="conf-pill" id="conf-pill"></div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-label">Messages</div>
+        <div class="stat-value" id="msg-count">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Avg Confidence</div>
+        <div class="stat-value" id="avg-conf">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Session</div>
+        <div class="stat-value" id="session-display">—</div>
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="msg bot">
+        <div class="avatar">AI</div>
+        <div>
+          <div class="bubble">Hello! I am the CHARUSAT student support assistant. Ask me anything about financial support, eligibility criteria, conference procedures, or reimbursement policies.</div>
+          <div class="msg-meta">just now</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <textarea id="input" placeholder="Ask about student support policy..." onkeydown="handleKey(event)" rows="1"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
+  const API = 'http://127.0.0.1:8000/chat';
+  let sessionId = 'sess_' + Math.random().toString(36).substr(2, 6);
+  let msgCount = 0, totalConf = 0, confCount = 0;
 
-const sessionId = "kenil"; // you can make this dynamic later
+  document.getElementById('session-display').textContent = sessionId.split('_')[1];
 
-function addMessage(text, sender) {
-    const chat = document.getElementById("chat");
-    const message = document.createElement("div");
-    message.classList.add("message", sender);
-    message.innerText = text;
-    chat.appendChild(message);
-    chat.scrollTop = chat.scrollHeight;
-}
+  function time() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
 
-async function sendMessage() {
+  function addMsg(text, role, conf) {
+    const box = document.getElementById('messages');
+    const d = document.createElement('div');
+    d.className = 'msg ' + role;
+    const confNote = (role === 'bot' && conf != null)
+      ? ' · conf: ' + Math.round(conf * 100) + '%' : '';
+    d.innerHTML = `
+      <div class="avatar">${role === 'bot' ? 'AI' : 'You'}</div>
+      <div>
+        <div class="bubble">${text}</div>
+        <div class="msg-meta">${time()}${confNote}</div>
+      </div>`;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+  }
 
-    const input = document.getElementById("messageInput");
-    const userText = input.value;
+  function showTyping() {
+    const box = document.getElementById('messages');
+    const d = document.createElement('div');
+    d.id = 'typing'; d.className = 'msg bot';
+    d.innerHTML = `<div class="avatar">AI</div><div><div class="bubble"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div></div>`;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+  }
 
-    if (!userText) return;
+  function hideTyping() {
+    const t = document.getElementById('typing');
+    if (t) t.remove();
+  }
 
-    addMessage(userText, "user");
-    input.value = "";
+  function updateConf(conf) {
+    const pill = document.getElementById('conf-pill');
+    const pct = Math.round(conf * 100);
+    pill.textContent = 'confidence ' + pct + '%';
+    pill.style.display = 'block';
+    pill.className = 'conf-pill';
+    if (conf >= 0.5) pill.classList.add('high');
+    else if (conf >= 0.3) pill.classList.add('med');
+    else pill.classList.add('low');
+  }
 
-    try {
-        const response = await fetch("http://127.0.0.1:8000/chat", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                session_id: sessionId,
-                question: userText
-            })
-        });
-
-        const data = await response.json();
-        addMessage(data.answer, "bot");
-
-    } catch (error) {
-        addMessage("Error connecting to server.", "bot");
+  function updateStats(conf) {
+    msgCount++;
+    document.getElementById('msg-count').textContent = msgCount;
+    if (conf != null) {
+      totalConf += conf; confCount++;
+      document.getElementById('avg-conf').textContent = Math.round((totalConf / confCount) * 100) + '%';
     }
-}
+  }
 
+  function addHistory(q) {
+    const list = document.getElementById('history-list');
+    list.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+    const d = document.createElement('div');
+    d.className = 'history-item active';
+    d.innerHTML = `<div class="h-text">${q.length > 28 ? q.substr(0, 28) + '...' : q}</div><div class="h-time">${time()}</div>`;
+    list.insertBefore(d, list.firstChild);
+  }
+
+  function newChat() {
+    sessionId = 'sess_' + Math.random().toString(36).substr(2, 6);
+    document.getElementById('session-display').textContent = sessionId.split('_')[1];
+    document.getElementById('messages').innerHTML = `
+      <div class="msg bot">
+        <div class="avatar">AI</div>
+        <div>
+          <div class="bubble">New session started. How can I help you?</div>
+          <div class="msg-meta">${time()}</div>
+        </div>
+      </div>`;
+    msgCount = 0; totalConf = 0; confCount = 0;
+    document.getElementById('msg-count').textContent = '0';
+    document.getElementById('avg-conf').textContent = '—';
+    document.getElementById('conf-pill').style.display = 'none';
+  }
+
+  async function sendMessage() {
+    const inp = document.getElementById('input');
+    const q = inp.value.trim();
+    if (!q) return;
+    inp.value = ''; inp.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+    addMsg(q, 'user', null);
+    addHistory(q);
+    showTyping();
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, session_id: sessionId })
+      });
+      const data = await res.json();
+      hideTyping();
+      addMsg(data.answer, 'bot', data.confidence);
+      updateConf(data.confidence);
+      updateStats(data.confidence);
+    } catch (e) {
+      hideTyping();
+      addMsg('Could not connect to the server. Make sure FastAPI is running on http://127.0.0.1:8000', 'bot', null);
+    }
+    document.getElementById('send-btn').disabled = false;
+    inp.focus();
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  document.getElementById('input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+  });
 </script>
-
 </body>
 </html>
