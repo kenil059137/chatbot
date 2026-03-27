@@ -1,3 +1,10 @@
+import os
+import ssl
+
+os.environ["CURL_CA_BUNDLE"] = ""
+os.environ["REQUESTS_CA_BUNDLE"] = ""
+ssl._create_default_https_context = ssl._create_unverified_context
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.services.multi_agent_rag import multi_agent_rag
 from backend.services.chat_history import save_message, get_history, get_all_sessions
 
-app = FastAPI(title="Advanced Student Support Chatbot API")
+app = FastAPI(title="CHARUSAT Student Support Chatbot API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,22 +31,26 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 def chat(request: ChatRequest):
     try:
+        # Save user message first — before generating answer
+        save_message(request.session_id, "user", request.question)
+
         history = get_history(request.session_id)
 
-        answer, confidence = multi_agent_rag(
+        answer, confidence, confidence_level = multi_agent_rag(
             question=request.question,
             session_id=request.session_id,
             history=history
         )
 
-        save_message(request.session_id, "user", request.question)
+        # Save assistant answer after generation
         save_message(request.session_id, "assistant", answer)
 
         return {
             "session_id": request.session_id,
             "question": request.question,
             "answer": answer,
-            "confidence": confidence
+            "confidence": confidence,
+            "confidence_level": confidence_level  # "high" / "medium" / "low" / "none"
         }
 
     except Exception as e:
@@ -58,6 +69,11 @@ def get_sessions():
     return {"sessions": sessions}
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/")
 def root():
-    return {"message": "Advanced Chatbot API Running"}
+    return {"message": "CHARUSAT Chatbot API Running"}

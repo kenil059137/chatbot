@@ -1,3 +1,4 @@
+import re
 from .vector_store import vector_db
 from .confidence import calculate_confidence
 
@@ -5,51 +6,57 @@ from .confidence import calculate_confidence
 def get_category_filter(query):
     query_lower = query.lower()
 
-    if any(w in query_lower for w in ["course", "program", "b.tech", "bca", "mba", "intake", "duration"]):
+    # Use word boundaries to avoid false matches like "coffee", "referee"
+    def has_word(word):
+        return bool(re.search(rf'\b{re.escape(word)}\b', query_lower))
+
+    if any(has_word(w) for w in ["course", "program", "b.tech", "bca", "mba", "intake", "duration"]):
         return "courses"
-    if any(w in query_lower for w in ["scholarship", "financial aid", "stipend"]):
+    if any(has_word(w) for w in ["scholarship", "financial aid", "stipend"]):
         return "scholarship"
-    if any(w in query_lower for w in ["exam", "result", "examination", "sessional"]):
+    if any(has_word(w) for w in ["exam", "result", "examination", "sessional"]):
         return "exam"
-    if any(w in query_lower for w in ["admit", "document", "apply", "application"]):
+    if any(has_word(w) for w in ["admit", "document", "apply", "application", "admission"]):
         return "admission"
-    if any(w in query_lower for w in ["reimbursement", "conference", "research paper"]):
+    if any(has_word(w) for w in ["reimbursement", "conference", "research paper", "student support"]):
         return "financial_support"
-    if any(w in query_lower for w in ["fee", "eligibility"]):
+    if any(has_word(w) for w in ["fee", "eligibility"]):
         return "courses"
+
     return None
 
 
 def retrieve_with_scores(query):
 
     category = get_category_filter(query)
-    docs = []
 
     if category:
         print(f"Filtering by category: {category}")
-        docs = vector_db.max_marginal_relevance_search(
+        docs_with_scores = vector_db.similarity_search_with_score(
             query,
             k=8,
-            fetch_k=20,
             filter={"category": category}
         )
+    else:
+        docs_with_scores = []
 
-    # fallback to general search if category filter returns nothing
-    if not docs:
-        print("No category match or empty result — using general search")
-        docs = vector_db.max_marginal_relevance_search(
-            query,
-            k=8,
-            fetch_k=20
-        )
-
-    # similarity search for confidence scores
-    docs_with_scores = vector_db.similarity_search_with_score(query, k=8)
+    # Fallback to general search if category filter returns nothing
+    if not docs_with_scores:
+        if category:
+            print("No category match — falling back to general search")
+        docs_with_scores = vector_db.similarity_search_with_score(query, k=8)
 
     if not docs_with_scores:
-        return docs, 0
+        return [], 0.0, "none"
 
+    docs = [doc for doc, _ in docs_with_scores]
     scores = [score for _, score in docs_with_scores]
-    confidence = calculate_confidence(scores)
 
-    return docs, confidence
+    # Pass source info for traceability
+    for doc in docs:
+        source = doc.metadata.get("source", "unknown")
+        print(f"  Retrieved: {source}")
+
+    confidence, confidence_level = calculate_confidence(scores)
+
+    return docs, confidence, confidence_level
