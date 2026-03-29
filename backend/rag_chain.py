@@ -25,7 +25,7 @@ def _call_gemini(prompt):
 
 def _call_groq(prompt):
     response = groq_client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.3-70b-versatile",  # current active model
         messages=[{"role": "user", "content": prompt}],
         max_tokens=1000
     )

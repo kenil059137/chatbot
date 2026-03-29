@@ -63,19 +63,29 @@ def is_useful_content(text):
 
 
 def clean_content(text, category):
-    # for course pages — remove navigation
     if category == "courses":
         lines = text.split("\n")
         cleaned = []
         start = False
         for line in lines:
-            if any(k in line for k in ["Faculty:", "Institute:", "Duration:", "Eligibility", "Bachelor", "Master", "Programme"]):
+            # Skip navigation/header lines
+            if any(skip in line for skip in [
+                "Quick Links", "Pay Fees", "Alumni", 
+                "info@charusat", "+91", "Mon - Sat",
+                "How to Reach", "Donation", "Downloads"
+            ]):
+                continue
+            if any(k in line for k in [
+                "Faculty:", "Institute:", "Duration:", 
+                "Eligibility", "Bachelor", "Master", 
+                "Programme", "B.Tech", "M.Tech", 
+                "MBA", "MCA", "BCA", "Intake"
+            ]):
                 start = True
             if start and line.strip():
                 cleaned.append(line.strip())
         result = "\n".join(cleaned)
-        return result if len(result) > 200 else text  # fallback to full text
-    # for other pages — return as is
+        return result if len(result) > 200 else text
     return text
 
 
@@ -175,13 +185,18 @@ def ingest_all():
     for cat, count in categories.items():
         print(f"  {cat}: {count} chunks")
 
-    embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")  # match vector_store.py
 
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
         print("\nOld ChromaDB cleared.")
 
-    db = Chroma.from_documents(chunks, embedding, persist_directory=CHROMA_PATH)
+    db = Chroma.from_documents(
+    chunks,
+    embedding,
+    persist_directory=CHROMA_PATH,
+    collection_name="charusat_docs"  # match vector_store.py
+    )
     print(f"\nIngestion complete. Total chunks stored: {db._collection.count()}")
 
 
