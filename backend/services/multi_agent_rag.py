@@ -9,62 +9,58 @@ def _rewrite(x):
     if not x.get("history", "").strip():
         return {**x, "standalone_question": x["question"]}
     try:
-        prompt = f"""You are a question rewriter. Given conversation history and a follow up question, rewrite the follow up as a complete standalone question that includes all necessary context from the history.
+        prompt = f"""Rewrite the follow up question as a complete standalone question.
+Keep ALL specific details from history.
 
 Conversation History:
 {x['history']}
 
 Follow Up Question: {x['question']}
 
-Rules:
-- Include specific subject names from history (e.g. "B.Tech courses" not just "these courses")
-- Keep it as a single clear question
-- Output ONLY the rewritten question, nothing else
-
-Rewritten Question:"""
+Output ONLY the rewritten question:"""
 
         rewritten = gemini_llm(prompt).strip()
         print(f"Original: {x['question']}")
         print(f"Rewritten: {rewritten}")
         return {**x, "standalone_question": rewritten}
-    except:
+
+    except Exception as e:
+        print(f"Rewrite failed: {e}")
         return {**x, "standalone_question": x["question"]}
 
 
 def _retrieve(x):
-    docs, confidence, level = retrieve_with_scores(x["standalone_question"])
-    context = "\n\n".join(d.page_content for d in docs)
-    print(f"Context length: {len(context)}")  # add this
-    print(f"Confidence: {level}")              # add this
-    print(f"Context preview: {context[:200]}") # add this
-    return {
-        **x,
-        "context": context,
-        "confidence": confidence,
-        "confidence_level": level
-    }
-
-
-def _generate(x):
-    if not x["context"].strip():
+    try:
+        docs, confidence, level = retrieve_with_scores(x["standalone_question"])
+        context = "\n\n".join(d.page_content for d in docs)
+        print(f"Context length: {len(context)}, Confidence: {level}")
         return {
             **x,
-            "answer": "I couldn't find relevant info. Visit www.charusat.ac.in",
+            "context": context,
+            "confidence": confidence,
+            "confidence_level": level
+        }
+    except Exception as e:
+        print(f"Retrieval error: {e}")
+        return {
+            **x,
+            "context": "",
             "confidence": 0.0,
             "confidence_level": "none"
         }
 
+
+def _generate(x):
     answer = generate_answer(x["question"], x["context"], x.get("history", ""))
 
-    # Only run critic when confidence is low — saves API calls
     if x["confidence_level"] == "low":
         is_valid, status = verify_answer(x["question"], x["context"], answer)
         print(f"Critic: {status}")
         if not is_valid:
-            answer = "I'm not confident enough. Visit www.charusat.ac.in"
-            return {**x, "answer": answer, "confidence": min(x["confidence"], 0.3)}
+            answer = "I'm not confident enough. Please visit www.charusat.ac.in"
+            return {**x, "answer": answer, "confidence": 0.3, "confidence_level": "low"}
     else:
-        print(f"Critic: SKIPPED (confidence is {x['confidence_level']})")
+        print(f"Critic: SKIPPED (confidence: {x['confidence_level']})")
 
     return {**x, "answer": answer}
 

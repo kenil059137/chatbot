@@ -29,12 +29,13 @@ class ChatRequest(BaseModel):
 
 
 @app.post("/chat")
-def chat(request: ChatRequest):
+async def chat(request: ChatRequest):
     try:
-        # Save user message first — before generating answer
-        save_message(request.session_id, "user", request.question)
-
+        # Load history FIRST before saving new message
         history = get_history(request.session_id)
+
+        # Then save user message
+        save_message(request.session_id, "user", request.question)
 
         answer, confidence, confidence_level = multi_agent_rag(
             question=request.question,
@@ -42,7 +43,6 @@ def chat(request: ChatRequest):
             history=history
         )
 
-        # Save assistant answer after generation
         save_message(request.session_id, "assistant", answer)
 
         return {
@@ -50,7 +50,7 @@ def chat(request: ChatRequest):
             "question": request.question,
             "answer": answer,
             "confidence": confidence,
-            "confidence_level": confidence_level  # "high" / "medium" / "low" / "none"
+            "confidence_level": confidence_level
         }
 
     except Exception as e:
