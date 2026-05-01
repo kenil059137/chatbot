@@ -8,10 +8,11 @@ def get_category_filter(query):
 
     def has_word(word):
         return bool(re.search(rf'\b{re.escape(word)}\b', query_lower))
-
-    if any(has_word(w) for w in ["course", "program", "b.tech", "bca", "mba", "intake", "duration", "offer", "available", "provide"]):
+    
+   
+    if any(has_word(w) for w in ["course", "program", "b.tech", "bca", "mba", "intake", "duration"]):
         return "courses"
-    if any(has_word(w) for w in ["scholarship", "financial aid", "stipend"]):
+    if any(has_word(w) for w in ["scholarship", "financial aid", "stipend", "mysy", "mkkn", "shodh", "cmss"]) or "government scholarship" in query_lower:
         return "scholarship"
     if any(has_word(w) for w in ["exam", "result", "examination", "sessional"]):
         return "exam"
@@ -28,7 +29,9 @@ def is_listing_question(query):
     listing_words = ["what courses", "which courses", "list courses",
                      "what programs", "courses offered", "courses available",
                      "courses provide", "what btech", "what mba", "what bca",
-                     "courses does", "courses do", "offer"]
+                     "courses does", "courses do", "offer", "which scholarship", "what scholarship", "list scholarship",
+                     "what government", "which government", "government scholarship",
+                     "scholarships available", "scholarships offered"]
     query_lower = query.lower()
     return any(w in query_lower for w in listing_words)
 
@@ -53,6 +56,12 @@ def retrieve_with_scores(query):
     greetings = ["hi", "hello", "hey", "good morning", "good evening", "namaste"]
     if query.strip().lower() in greetings:
         return [], 1.0, "high"
+    
+    personal_keywords = ["my name", "what is my name", "who am i", "do you remember", "i told you"]
+    if any(p in query.lower() for p in personal_keywords):
+        print("Personal question — skipping DB retrieval")
+        return [], 1.0, "high"
+
 
     category = get_category_filter(query)
 

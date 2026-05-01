@@ -6,7 +6,21 @@ from ..rag_chain import gemini_llm
 
 
 def _rewrite(x):
+    
+    # Check personal BEFORE rewriting
+    personal_keywords = ["my name", "what is my name", "who am i", "do you remember", "i told you"]
+    if any(p in x["question"].lower() for p in personal_keywords):
+        print("Personal question — skipping rewrite")
+        return {**x, "standalone_question": x["question"]}
+
     if not x.get("history", "").strip():
+    # Still rewrite if question seems misspelled or unclear
+       if len(x["question"].split()) <= 4 or any(
+        w in x["question"].lower() 
+        for w in ["scolership", "scholership", "goverment", "univercity"]
+     ):
+        pass  # fall through to rewrite
+    else:
         return {**x, "standalone_question": x["question"]}
     try:
         prompt = f"""Rewrite the follow up question as a complete standalone question.
@@ -52,8 +66,12 @@ def _retrieve(x):
 
 def _generate(x):
     answer = generate_answer(x["question"], x["context"], x.get("history", ""))
+    personal_keywords = ["my name", "what is my name", "who am i", "do you remember", "i told you"]
+    is_personal = any(p in x["question"].lower() for p in personal_keywords)
 
-    if x["confidence_level"] == "low":
+    
+
+    if not is_personal and  x["confidence_level"] == "low":
         is_valid, status = verify_answer(x["question"], x["context"], answer)
         print(f"Critic: {status}")
         if not is_valid:
